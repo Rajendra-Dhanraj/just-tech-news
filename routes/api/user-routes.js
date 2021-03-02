@@ -10,7 +10,7 @@ router.get("/", (req, res) => {
   // User model inherits functionality from the Sequelize Model class. .findAll() is one of the Model class's methods. The .findAll() method lets us query all of the users from the user table in the database, and is the JavaScript equivalent of the following SQL query:
   // find.All() = SELECT * FROM users;
   User.findAll({
-      // this will hide password data
+    // this will hide password data
     attributes: { exclude: ["password"] },
   })
     .then((dbUserData) => res.json(dbUserData))
@@ -64,6 +64,7 @@ router.put("/:id", (req, res) => {
   // if req.body has exact key/value pairs to match the model, you can just use `req.body` instead
 
   User.update(req.body, {
+    individualHooks: true,
     where: {
       id: req.params.id,
     },
