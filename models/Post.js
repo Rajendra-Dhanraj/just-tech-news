@@ -1,6 +1,5 @@
 const { Model, DataTypes } = require("sequelize");
 const sequelize = require("../config/connection");
-const { truncate } = require("./User");
 
 // create our Post model
 class Post extends Model {}
@@ -25,6 +24,7 @@ Post.init(
         isURL: true,
       },
     },
+    // references the id of the "user" column
     user_id: {
       type: DataTypes.INTEGER,
       references: {
