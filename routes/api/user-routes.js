@@ -2,7 +2,7 @@
 // Create, read, update, and delete vs Get Put Post Delete
 
 const router = require("express").Router();
-const { User } = require("../../models");
+const { User, Post, Vote } = require("../../models");
 
 // GET /api/users
 router.get("/", (req, res) => {
@@ -28,6 +28,18 @@ router.get("/:id", (req, res) => {
       // equal to SELECT * FROM users WHERE id = 1
       id: req.params.id,
     },
+    include: [
+      {
+        model: Post,
+        attributes: ["id", "title", "post_url", "created_at"],
+      },
+      {
+        model: Post,
+        attributes: ["title"],
+        through: Vote,
+        as: "voted_posts",
+      },
+    ],
   })
     .then((dbUserData) => {
       if (!dbUserData) {
@@ -69,7 +81,7 @@ router.post("/login", (req, res) => {
       res.status(400).json({ message: "No user with that email address!" });
       return;
     }
-      // valid password returns true or false 
+    // valid password returns true or false
     const validPassword = dbUserData.checkPassword(req.body.password);
     if (!validPassword) {
       res.status(400).json({ message: "Incorrect password!" });
