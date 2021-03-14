@@ -1,13 +1,14 @@
-// This file will contain all of the user-facing routes, such as the homepage and login page.
-
 const router = require("express").Router();
 const sequelize = require("../config/connection");
-const withAuth = require('../utils/auth');
+const withAuth = require("../utils/auth");
 const { Post, User, Comment } = require("../models");
 
-router.get("/", (req, res) => {
-  console.log(req.session);
+router.get("/", withAuth, (req, res) => {
   Post.findAll({
+    where: {
+      // use the ID from the session
+      user_id: req.session.user_id,
+    },
     attributes: [
       "id",
       "post_url",
@@ -36,35 +37,18 @@ router.get("/", (req, res) => {
     ],
   })
     .then((dbPostData) => {
-      // pass a single post object int the homepage template
-      // console.log(dbPostData[0]);
-      const posts = dbPostData.map((post) => post.get({ plain: true })); // This will loop over and map each Sequelize object into a serialized version of itself, saving the results in a new posts array.
-
-      res.render("homepage", {
-        posts,
-        loggedIn: req.session.loggedIn, // conditionally will show login/log out
-      });
+      // serialize data before passing to template (mapping data into array)
+      const posts = dbPostData.map((post) => post.get({ plain: true }));
+      res.render("dashboard", { posts, loggedIn: true });
     })
     .catch((err) => {
+      console.log(err);
       res.status(500).json(err);
     });
 });
 
-router.get("/login", (req, res) => {
-  // check to see if user is logged in
-  if (req.session.loggedIn) {
-    res.redirect("/");
-    return;
-  }
-
-  res.render("login");
-});
-
-router.get("/post/:id", (req, res) => {
-  Post.findOne({
-    where: {
-      id: req.params.id,
-    },
+router.get("/edit/:id", withAuth, (req, res) => {
+  Post.findByPk(req.params.id, {
     attributes: [
       "id",
       "post_url",
@@ -79,36 +63,32 @@ router.get("/post/:id", (req, res) => {
     ],
     include: [
       {
-        model: Comment, // comments on post
+        model: Comment,
         attributes: ["id", "comment_text", "post_id", "user_id", "created_at"],
         include: {
-          model: User, // user that wrote the comment
+          model: User,
           attributes: ["username"],
         },
       },
       {
-        model: User, // username of post
+        model: User,
         attributes: ["username"],
       },
     ],
   })
     .then((dbPostData) => {
-      if (!dbPostData) {
-        res.status(404).json({ message: "No post found with this id" });
-        return;
+      if (dbPostData) {
+        const post = dbPostData.get({ plain: true });
+
+        res.render("edit-post", {
+          post,
+          loggedIn: true,
+        });
+      } else {
+        res.status(404).end();
       }
-
-      // serialize the data and put into array?
-      const post = dbPostData.get({ plain: true });
-
-      // pass data to template
-      res.render("single-post", {
-        post,
-        loggedIn: req.session.loggedIn,
-      });
     })
     .catch((err) => {
-      console.log(err);
       res.status(500).json(err);
     });
 });
