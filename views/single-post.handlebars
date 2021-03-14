@@ -1,0 +1,29 @@
+{{> post-info post}}
+{{!-- gets posts from post-info handlebars --}}
+
+
+{{!-- Comments section: {{#each}} helper to iterate over the comments --}}
+{{!-- #if loggedIn is conditional, meaning only if the user is logged in, will they see the form option to leave an
+comment --}}
+{{#if loggedIn}}
+<form class="comment-form">
+  <div>
+    <textarea name="comment-body"></textarea>
+  </div>
+
+  <div>
+    <button type="submit">add comment</button>
+    <button type="button" class="upvote-btn">upvote</button>
+  </div>
+</form>
+{{/if}}
+
+{{> comments post.comments}}
+{{!-- Gets partial from comments.handlebars --}}
+
+
+{{!-- these javascript files are only read if the user is logged in to avoid errors --}}
+{{#if loggedIn}}
+<script src="/javascript/comment.js"></script>
+<script src="/javascript/upvote.js"></script>
+{{/if}}
